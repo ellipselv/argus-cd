@@ -39,4 +39,4 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
             --generate-notes \
-            "dist/argus-cd_${{ steps.version.outputs.version }}_amd64.deb"
+            ./dist/*.deb
