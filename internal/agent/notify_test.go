@@ -33,12 +33,12 @@ func TestNotifier_PayloadShape(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	NewNotifier().Notify(context.Background(), srv.URL, AlertDeployFailure, "lingua-backend", "compose up failed")
+	NewNotifier().Notify(context.Background(), srv.URL, AlertDeployFailure, "backend", "compose up failed")
 
 	if got.Kind != AlertDeployFailure {
 		t.Errorf("kind = %q", got.Kind)
 	}
-	if got.Application != "lingua-backend" {
+	if got.Application != "backend" {
 		t.Errorf("application = %q", got.Application)
 	}
 	if got.Message != "compose up failed" {

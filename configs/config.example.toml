@@ -2,13 +2,13 @@
 # This file embeds a GitHub PAT — chmod 600 in production.
 
 [agent]
-id = "madrid-node-01"
+id = "node-01"
 executor = "docker-compose"
 poll_interval = "30s"
 
 [[apps]]
-name = "lingua-backend"
-apps_dir = "/opt/argus/apps/lingua-backend"
+name = "backend"
+apps_dir = "/opt/argus/apps/backend"
 health_port = 8080
 health_path = "/health"
 health_timeout = "90s"
@@ -18,7 +18,7 @@ webhook_url = ""
 
   [apps.git]
   provider = "github"                 # gitlab not yet implemented
-  repo_url = "https://github.com/daniils/lingua-franca"
+  repo_url = "https://github.com/me/backend"
   branch = "main"
   compose_path = "docker-compose.yml"
   token = "github_pat_11A..."
