@@ -46,8 +46,12 @@ jobs:
         with:
           go-version: '1.24'
           cache: true
-      - name: setup nfpm
-        uses: goreleaser/nfpm-action@v2
+      - name: install nfpm
+        run: |
+          NFPM_VERSION=2.46.3
+          curl -sSfL "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin nfpm
+          nfpm --version
       - name: make deb
         env:
           VERSION: "0.1.0-build-${{ github.run_number }}"
