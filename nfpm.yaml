@@ -13,7 +13,7 @@ description: |
   rolls back automatically on health-check failure.
 vendor: argus-cd
 homepage: https://github.com/ellipselv/argus-cd
-license: MIT
+license: Apache-2.0
 
 depends:
   - docker-ce | docker.io
