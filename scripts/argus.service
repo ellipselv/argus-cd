@@ -6,7 +6,7 @@ Requires=docker.service
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/arguscd -config /etc/argus/config.toml
+ExecStart=/usr/local/bin/argus -config /etc/argus/config.toml
 Restart=always
 RestartSec=10s
 StandardOutput=journal

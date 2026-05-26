@@ -28,7 +28,7 @@ health_port = 8080
 health_path = "/health"
 health_timeout = "90s"
 health_interval = "5s"
-webhook_url = "https://alerts.example.com/arguscd"  # optional
+webhook_url = "https://alerts.example.com/argus"  # optional
 
   [apps.git]
   provider = "github"
@@ -46,14 +46,14 @@ file inside `apps_dir`.
 ## Run
 
 ```sh
-sudo systemctl restart arguscd
-sudo journalctl -u arguscd -f
+sudo systemctl restart argus
+sudo journalctl -u argus -f
 ```
 
 ## Build from source
 
 ```sh
-make build   # → bin/arguscd
+make build   # → bin/argus
 make test    # go test -race ./...
 make deb     # → dist/argus-cd_<VERSION>_amd64.deb
 ```

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Smoke test for arguscd: one happy-path deploy + one forced rollback.
+# Smoke test for argus: one happy-path deploy + one forced rollback.
 # Runs entirely locally: real docker compose, fake GitHub, no PAT required.
 # Expects bash, docker (v2 compose plugin), curl, jq, go, make on PATH.
 set -euo pipefail
 
-SMOKE_DIR=/tmp/arguscd-smoke
+SMOKE_DIR=/tmp/argus-smoke
 APP_DIR=$SMOKE_DIR/app
 STATE=$SMOKE_DIR/state.json
 CONFIG=$SMOKE_DIR/config.toml
-LOG=$SMOKE_DIR/arguscd.log
+LOG=$SMOKE_DIR/argus.log
 MOCK_URL=http://127.0.0.1:17070
 HEALTH_URL=http://127.0.0.1:8080/health
-COMPOSE_PROJECT=arguscd-smoke
+COMPOSE_PROJECT=argus-smoke
 
 cleanup() {
   set +e
@@ -25,7 +25,7 @@ cleanup() {
 trap cleanup EXIT
 
 # Reap stragglers from any earlier failed run before we start.
-pkill -f "arguscd-smoke/mock-github" 2>/dev/null || true
+pkill -f "argus-smoke/mock-github" 2>/dev/null || true
 docker compose -p "$COMPOSE_PROJECT" down --remove-orphans >/dev/null 2>&1 || true
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -36,7 +36,7 @@ mkdir -p "$APP_DIR"
 echo "==> Pre-pulling test image..."
 docker pull -q hashicorp/http-echo >/dev/null
 
-echo "==> Building arguscd..."
+echo "==> Building argus..."
 make build >/dev/null
 
 echo "==> Building mock GitHub..."
@@ -71,8 +71,8 @@ health_interval = "1s"
   token = "fake"
 EOF
 
-echo "==> Starting arguscd..."
-./bin/arguscd -config "$CONFIG" -state "$STATE" -git-base-url "$MOCK_URL" > "$LOG" 2>&1 &
+echo "==> Starting argus..."
+./bin/argus -config "$CONFIG" -state "$STATE" -git-base-url "$MOCK_URL" > "$LOG" 2>&1 &
 ARGUS_PID=$!
 
 echo "==> Waiting for happy-path deploy..."
@@ -85,7 +85,7 @@ for i in $(seq 1 60); do
 done
 if ! grep -q '"msg":"deploy finalized"' "$LOG" 2>/dev/null; then
   echo "FAIL: happy-path deploy did not complete"
-  echo "------- arguscd log -------"
+  echo "------- argus log -------"
   cat "$LOG"
   exit 1
 fi
@@ -113,7 +113,7 @@ for i in $(seq 1 90); do
 done
 if ! grep -q '"kind":"rollback"' "$LOG" 2>/dev/null; then
   echo "FAIL: rollback alert did not fire in 90s"
-  echo "------- arguscd log (last 30 lines) -------"
+  echo "------- argus log (last 30 lines) -------"
   tail -30 "$LOG"
   exit 1
 fi
@@ -124,17 +124,22 @@ if [[ "$AFTER_SHA" != "$GOOD_SHA" ]]; then
   exit 1
 fi
 
+# Simulate "operator fixed the upstream" so the agent stops cycling bad → rollback
+# and we can observe a steady state.
+echo "==> Switching mock back to good to simulate fixed upstream..."
+curl -sf "$MOCK_URL/switch/good" >/dev/null
+
 echo "==> Waiting for health to recover after restore..."
 for i in $(seq 1 30); do
-  if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
+  if curl -sf --max-time 2 "$HEALTH_URL" >/dev/null 2>&1; then
     echo "    health recovered at i=$i"
     break
   fi
   sleep 1
 done
-if ! curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
+if ! curl -sf --max-time 2 "$HEALTH_URL" >/dev/null 2>&1; then
   echo "FAIL: health not 200 within 30s after rollback restore"
-  echo "------- arguscd log (last 30 lines) -------"
+  echo "------- argus log (last 30 lines) -------"
   tail -30 "$LOG"
   echo "------- docker ps -------"
   docker ps --filter "label=com.docker.compose.project=$COMPOSE_PROJECT" 2>&1 || true

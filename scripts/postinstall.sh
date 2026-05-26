@@ -13,6 +13,6 @@ fi
 
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload
-    systemctl enable arguscd.service
-    systemctl start arguscd.service
+    systemctl enable argus.service
+    systemctl start argus.service
 fi

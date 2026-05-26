@@ -1,4 +1,4 @@
-// mock-github stands in for api.github.com during the arguscd smoke test.
+// mock-github stands in for api.github.com during the argus smoke test.
 // It serves /repos/<o>/<r>/commits/<branch> and /repos/<o>/<r>/contents/<path>
 // from an in-memory fixture that the orchestrator can flip via /switch/<name>.
 package main
@@ -32,7 +32,7 @@ var (
 `,
 		},
 		"bad": {
-			// Different SHA forces arguscd to attempt a new deploy. The compose
+			// Different SHA forces argus to attempt a new deploy. The compose
 			// listens on the wrong port, so the /health probe on 8080 will fail
 			// and rollback should fire.
 			sha: "0000000000000000000000000000000000000002",

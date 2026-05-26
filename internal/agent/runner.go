@@ -41,7 +41,7 @@ func NewRunner(cfg *Config, statePath, gitBaseURL string) (*Runner, error) {
 }
 
 func (r *Runner) Run(ctx context.Context) {
-	slog.Info("arguscd starting",
+	slog.Info("argus starting",
 		"id", r.cfg.Agent.ID,
 		"apps", appNames(r.cfg.Apps),
 		"poll", time.Duration(r.cfg.Agent.PollInterval),
@@ -53,7 +53,7 @@ func (r *Runner) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			slog.Info("arguscd stopping")
+			slog.Info("argus stopping")
 			return
 		case <-t.C:
 			r.tick(ctx)

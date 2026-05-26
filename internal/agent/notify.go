@@ -26,7 +26,7 @@ func NewNotifier() *Notifier {
 }
 
 func (n *Notifier) Notify(ctx context.Context, url, kind, app, message string) {
-	slog.Warn("arguscd alert", "kind", kind, "app", app, "message", message)
+	slog.Warn("argus alert", "kind", kind, "app", app, "message", message)
 	if url == "" {
 		return
 	}

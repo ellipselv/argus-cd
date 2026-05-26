@@ -1,12 +1,12 @@
 .PHONY: build test deb clean
 
 VERSION ?= 0.1.0
-BIN := bin/arguscd
+BIN := bin/argus
 DEB := dist/argus-cd_$(VERSION)_amd64.deb
 
 build:
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o $(BIN) ./cmd/arguscd
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o $(BIN) ./cmd/argus
 
 test:
 	go test -race ./...
