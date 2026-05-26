@@ -15,15 +15,25 @@ type Runner struct {
 	notifier *Notifier
 }
 
-func NewRunner(cfg *Config) (*Runner, error) {
-	state, err := LoadState(DefaultStatePath)
+// NewRunner builds a Runner. statePath defaults to DefaultStatePath when empty;
+// gitBaseURL defaults to GitHub's public API when empty (override is for
+// smoke/integration tests).
+func NewRunner(cfg *Config, statePath, gitBaseURL string) (*Runner, error) {
+	if statePath == "" {
+		statePath = DefaultStatePath
+	}
+	state, err := LoadState(statePath)
 	if err != nil {
 		return nil, fmt.Errorf("load state: %w", err)
+	}
+	git := NewGit()
+	if gitBaseURL != "" {
+		git.baseURL = gitBaseURL
 	}
 	notifier := NewNotifier()
 	return &Runner{
 		cfg:      cfg,
-		git:      NewGit(),
+		git:      git,
 		state:    state,
 		deploy:   NewDeployer(notifier),
 		notifier: notifier,
