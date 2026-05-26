@@ -17,11 +17,15 @@ import (
 // content at a specific commit. Provider selection (github/gitlab) is via
 // the per-app config; gitlab support is not yet implemented.
 type Git struct {
-	http *http.Client
+	baseURL string
+	http    *http.Client
 }
 
 func NewGit() *Git {
-	return &Git{http: &http.Client{Timeout: 30 * time.Second}}
+	return &Git{
+		baseURL: "https://api.github.com",
+		http:    &http.Client{Timeout: 30 * time.Second},
+	}
 }
 
 func (g *Git) LatestSHA(ctx context.Context, app AppConfig) (string, error) {
@@ -51,7 +55,7 @@ func (g *Git) githubSHA(ctx context.Context, app AppConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/%s/commits/%s", owner, repo, app.Git.Branch)
+	endpoint := fmt.Sprintf("%s/repos/%s/%s/commits/%s", g.baseURL, owner, repo, app.Git.Branch)
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	req.Header.Set("Authorization", "Bearer "+app.Git.Token)
 	req.Header.Set("Accept", "application/vnd.github+json")
@@ -82,8 +86,8 @@ func (g *Git) githubFetch(ctx context.Context, app AppConfig, sha string) ([]byt
 	if err != nil {
 		return nil, err
 	}
-	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s?ref=%s",
-		owner, repo, app.Git.ComposePath, sha)
+	endpoint := fmt.Sprintf("%s/repos/%s/%s/contents/%s?ref=%s",
+		g.baseURL, owner, repo, app.Git.ComposePath, sha)
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	req.Header.Set("Authorization", "Bearer "+app.Git.Token)
 	req.Header.Set("Accept", "application/vnd.github+json")

@@ -20,11 +20,12 @@ const (
 // backup current compose, write new, bring up, health probe. On any failure
 // after the backup phase, the previous compose is restored and brought back.
 type Deployer struct {
-	notifier *Notifier
+	notifier  *Notifier
+	composeUp func(ctx context.Context, dir, project string, removeOrphans bool) error
 }
 
 func NewDeployer(n *Notifier) *Deployer {
-	return &Deployer{notifier: n}
+	return &Deployer{notifier: n, composeUp: composeUp}
 }
 
 // Deploy applies compose to app and waits for the health probe. Returns nil
@@ -49,7 +50,7 @@ func (d *Deployer) Deploy(ctx context.Context, app AppConfig, compose []byte) er
 		return fmt.Errorf("write compose: %w", err)
 	}
 
-	if err := composeUp(ctx, app.AppsDir, app.Name, true); err != nil {
+	if err := d.composeUp(ctx, app.AppsDir, app.Name, true); err != nil {
 		if hadPrevious {
 			if rbErr := d.restore(ctx, app); rbErr != nil {
 				return fmt.Errorf("compose up failed (%w); restore failed (%v)", err, rbErr)
@@ -97,7 +98,7 @@ func (d *Deployer) restore(ctx context.Context, app AppConfig) error {
 	if err := os.Rename(rollbackPath, composePath); err != nil {
 		return fmt.Errorf("restore compose: %w", err)
 	}
-	if err := composeUp(ctx, app.AppsDir, app.Name, false); err != nil {
+	if err := d.composeUp(ctx, app.AppsDir, app.Name, false); err != nil {
 		return fmt.Errorf("restore compose up: %w", err)
 	}
 	return nil

@@ -8,9 +8,9 @@ import (
 	"sync"
 )
 
-// StatePath is the canonical location of the persistent deploy state. It maps
-// application name → currently-deployed commit SHA.
-const StatePath = "/opt/argus/apps/argus-state.json"
+// DefaultStatePath is the canonical location of the persistent deploy state.
+// It maps application name → currently-deployed commit SHA.
+const DefaultStatePath = "/opt/argus/apps/argus-state.json"
 
 type State struct {
 	mu       sync.Mutex
@@ -18,12 +18,12 @@ type State struct {
 	versions map[string]string
 }
 
-func LoadState() (*State, error) {
-	if err := os.MkdirAll(filepath.Dir(StatePath), 0o755); err != nil {
+func LoadState(path string) (*State, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, err
 	}
-	s := &State{path: StatePath, versions: map[string]string{}}
-	b, err := os.ReadFile(StatePath)
+	s := &State{path: path, versions: map[string]string{}}
+	b, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
 		return s, nil
 	}

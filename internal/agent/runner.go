@@ -16,7 +16,7 @@ type Runner struct {
 }
 
 func NewRunner(cfg *Config) (*Runner, error) {
-	state, err := LoadState()
+	state, err := LoadState(DefaultStatePath)
 	if err != nil {
 		return nil, fmt.Errorf("load state: %w", err)
 	}
