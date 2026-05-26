@@ -1,0 +1,32 @@
+# Example argus-nexus config. Copy to /etc/argus/nexus.yaml and adjust.
+
+# URL of the argus-occulus management server.
+occulus_url: https://occulus.example.com
+
+# Optional bearer token sent to Occulus.
+occulus_token: ""
+
+# Base64-encoded Ed25519 public key matching the key Occulus signs bundles with.
+public_key: ""
+
+# Where deployed apps live on disk. Each project gets a subdirectory containing
+# docker-compose.yml (current) and docker-compose.rollback.yml (previous, during
+# a deploy).
+apps_dir: /opt/argus/apps
+
+# How often to ask Occulus for a new bundle per project.
+poll_interval: 30s
+
+# How long a freshly-deployed container has to respond 200 on /health before
+# nexus rolls back to the previous version.
+grace_period: 90s
+
+# How often to poll the health endpoint within the grace period.
+health_interval: 5s
+
+# Optional webhook for rollback and security alerts.
+notify_url: ""
+
+# Projects to watch. Must match the project names Occulus serves.
+projects:
+  - my-app
