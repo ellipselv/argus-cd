@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-if [ -d /run/systemd/system ] && systemctl is-active --quiet argus.service; then
-    systemctl stop argus.service
-    systemctl disable argus.service
+if [ -d /run/systemd/system ] && systemctl is-active --quiet arguscd.service; then
+    systemctl stop arguscd.service
+    systemctl disable arguscd.service
 fi

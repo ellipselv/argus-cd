@@ -19,13 +19,13 @@ depends:
   - docker-ce | docker.io
 
 contents:
-  - src: ./bin/argus
-    dst: /usr/local/bin/argus
+  - src: ./bin/arguscd
+    dst: /usr/local/bin/arguscd
     file_info:
       mode: 0755
 
-  - src: ./scripts/argus.service
-    dst: /lib/systemd/system/argus.service
+  - src: ./scripts/arguscd.service
+    dst: /lib/systemd/system/arguscd.service
     file_info:
       mode: 0644
 

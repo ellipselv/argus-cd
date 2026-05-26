@@ -1,12 +1,12 @@
 [Unit]
-Description=Argus GitOps Agent for Docker Compose
+Description=Argus-CD GitOps Agent for Docker Compose
 After=network.target docker.service
 Requires=docker.service
 
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/argus -config /etc/argus/config.toml
+ExecStart=/usr/local/bin/arguscd -config /etc/argus/config.toml
 Restart=always
 RestartSec=10s
 StandardOutput=journal
