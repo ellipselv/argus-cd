@@ -14,23 +14,20 @@ const (
 	AlertRollback      = "rollback"
 )
 
-// Notifier dispatches outbound webhook alerts. If url is empty, alerts are
-// only logged.
+// Notifier dispatches outbound webhook alerts. URL is per-call so the same
+// notifier serves apps with different alert endpoints. An empty URL skips
+// the HTTP call but still emits a structured log.
 type Notifier struct {
-	url  string
 	http *http.Client
 }
 
-func NewNotifier(url string) *Notifier {
-	return &Notifier{
-		url:  url,
-		http: &http.Client{Timeout: 10 * time.Second},
-	}
+func NewNotifier() *Notifier {
+	return &Notifier{http: &http.Client{Timeout: 10 * time.Second}}
 }
 
-func (n *Notifier) Notify(ctx context.Context, kind, app, message string) {
+func (n *Notifier) Notify(ctx context.Context, url, kind, app, message string) {
 	slog.Warn("argus alert", "kind", kind, "app", app, "message", message)
-	if n.url == "" {
+	if url == "" {
 		return
 	}
 	payload, _ := json.Marshal(map[string]string{
@@ -38,7 +35,7 @@ func (n *Notifier) Notify(ctx context.Context, kind, app, message string) {
 		"application": app,
 		"message":     message,
 	})
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, n.url, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
 		slog.Error("notify build", "err", err)
 		return

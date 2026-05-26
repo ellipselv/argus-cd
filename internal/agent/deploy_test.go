@@ -45,7 +45,7 @@ func testApp(t *testing.T, port int) AppConfig {
 
 func newTestDeployer(t *testing.T, composeUp func(context.Context, string, string, bool) error) *Deployer {
 	t.Helper()
-	d := NewDeployer(NewNotifier(""))
+	d := NewDeployer(NewNotifier())
 	d.composeUp = composeUp
 	return d
 }

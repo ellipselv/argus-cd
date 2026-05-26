@@ -11,8 +11,8 @@ import (
 )
 
 func TestNotifier_EmptyURL_NoNetwork(t *testing.T) {
-	// With no URL configured the Notifier should silently log and not panic.
-	NewNotifier("").Notify(context.Background(), AlertRollback, "app", "msg")
+	// With no URL, the Notifier should silently log and not panic.
+	NewNotifier().Notify(context.Background(), "", AlertRollback, "app", "msg")
 }
 
 func TestNotifier_PayloadShape(t *testing.T) {
@@ -33,7 +33,7 @@ func TestNotifier_PayloadShape(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	NewNotifier(srv.URL).Notify(context.Background(), AlertDeployFailure, "lingua-backend", "compose up failed")
+	NewNotifier().Notify(context.Background(), srv.URL, AlertDeployFailure, "lingua-backend", "compose up failed")
 
 	if got.Kind != AlertDeployFailure {
 		t.Errorf("kind = %q", got.Kind)
@@ -54,9 +54,7 @@ func TestNotifier_TolerantOfNon2xx(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	// Notify is fire-and-forget: a 5xx from the webhook should not panic
-	// and there's no error return to assert. Just verify the call lands.
-	NewNotifier(srv.URL).Notify(context.Background(), AlertRollback, "app", "x")
+	NewNotifier().Notify(context.Background(), srv.URL, AlertRollback, "app", "x")
 	if hits.Load() != 1 {
 		t.Errorf("expected 1 webhook hit, got %d", hits.Load())
 	}

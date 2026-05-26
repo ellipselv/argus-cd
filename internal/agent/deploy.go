@@ -56,7 +56,7 @@ func (d *Deployer) Deploy(ctx context.Context, app AppConfig, compose []byte) er
 				return fmt.Errorf("compose up failed (%w); restore failed (%v)", err, rbErr)
 			}
 		}
-		d.notifier.Notify(ctx, AlertDeployFailure, app.Name,
+		d.notifier.Notify(ctx, app.WebhookURL, AlertDeployFailure, app.Name,
 			fmt.Sprintf("docker compose up failed: %v", err))
 		return fmt.Errorf("compose up: %w", err)
 	}
@@ -71,11 +71,11 @@ func (d *Deployer) Deploy(ctx context.Context, app AppConfig, compose []byte) er
 			if rbErr := d.restore(ctx, app); rbErr != nil {
 				return fmt.Errorf("health failed; rollback failed: %w", rbErr)
 			}
-			d.notifier.Notify(ctx, AlertRollback, app.Name,
+			d.notifier.Notify(ctx, app.WebhookURL, AlertRollback, app.Name,
 				"new version failed health check; restored previous version")
 			return errors.New("rolled back: health check failed")
 		}
-		d.notifier.Notify(ctx, AlertDeployFailure, app.Name,
+		d.notifier.Notify(ctx, app.WebhookURL, AlertDeployFailure, app.Name,
 			"health check failed and no previous version to roll back to")
 		return errors.New("health check failed (no rollback available)")
 	}

@@ -5,8 +5,6 @@
 id = "madrid-node-01"
 executor = "docker-compose"
 poll_interval = "30s"
-# Optional outbound webhook for deploy_failure and rollback alerts.
-webhook_url = ""
 
 [[apps]]
 name = "lingua-backend"
@@ -15,6 +13,8 @@ health_port = 8080
 health_path = "/health"
 health_timeout = "90s"
 health_interval = "5s"
+# Optional outbound webhook for this app's deploy_failure and rollback alerts.
+webhook_url = ""
 
   [apps.git]
   provider = "github"                 # gitlab not yet implemented

@@ -18,7 +18,6 @@ type AgentConfig struct {
 	ID           string   `toml:"id"`
 	Executor     string   `toml:"executor"`
 	PollInterval Duration `toml:"poll_interval"`
-	WebhookURL   string   `toml:"webhook_url"`
 }
 
 type AppConfig struct {
@@ -28,6 +27,7 @@ type AppConfig struct {
 	HealthPath     string    `toml:"health_path"`
 	HealthTimeout  Duration  `toml:"health_timeout"`
 	HealthInterval Duration  `toml:"health_interval"`
+	WebhookURL     string    `toml:"webhook_url"`
 	Git            GitConfig `toml:"git"`
 }
 

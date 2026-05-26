@@ -20,7 +20,7 @@ func NewRunner(cfg *Config) (*Runner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load state: %w", err)
 	}
-	notifier := NewNotifier(cfg.Agent.WebhookURL)
+	notifier := NewNotifier()
 	return &Runner{
 		cfg:      cfg,
 		git:      NewGit(),
