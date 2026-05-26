@@ -1,20 +1,18 @@
-package nexus
+package agent
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 )
 
-// waitHealthy polls url every interval until it returns 200 OK or grace
-// expires. Returns true on success, false on timeout.
-func waitHealthy(ctx context.Context, url string, grace, interval time.Duration) bool {
-	deadline := time.Now().Add(grace)
+// waitHealthy polls url every interval until it returns 200 OK or total
+// elapses. Returns true on success, false on timeout or cancellation.
+func waitHealthy(ctx context.Context, url string, total, interval time.Duration) bool {
+	deadline := time.Now().Add(total)
 	client := &http.Client{Timeout: interval}
-
 	for {
-		if ok := probe(ctx, client, url); ok {
+		if probe(ctx, client, url) {
 			return true
 		}
 		if !time.Now().Before(deadline) {
@@ -39,8 +37,4 @@ func probe(ctx context.Context, client *http.Client, url string) bool {
 	}
 	defer resp.Body.Close()
 	return resp.StatusCode == http.StatusOK
-}
-
-func healthURL(port int) string {
-	return fmt.Sprintf("http://127.0.0.1:%d/health", port)
 }

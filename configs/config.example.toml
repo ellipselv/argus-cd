@@ -1,0 +1,26 @@
+# argus-cd agent config. Default install path: /etc/argus/config.toml
+# This file embeds a GitHub PAT — chmod 600 in production.
+
+[agent]
+id = "madrid-node-01"
+executor = "docker-compose"
+poll_interval = "30s"
+# Optional outbound webhook for deploy_failure and rollback alerts.
+webhook_url = ""
+
+[[apps]]
+name = "lingua-backend"
+apps_dir = "/opt/argus/apps/lingua-backend"
+health_port = 8080
+health_path = "/health"
+health_timeout = "90s"
+health_interval = "5s"
+
+  [apps.git]
+  provider = "github"                 # gitlab not yet implemented
+  repo_url = "https://github.com/daniils/lingua-franca"
+  branch = "main"
+  compose_path = "docker-compose.yml"
+  token = "github_pat_11A..."
+  token_obtained_at = 2026-05-20T10:00:00Z
+  token_expires_at = 2026-08-20T10:00:00Z
