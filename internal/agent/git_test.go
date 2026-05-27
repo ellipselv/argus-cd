@@ -177,11 +177,150 @@ func TestGit_UnknownProvider(t *testing.T) {
 	}
 }
 
-func TestGit_GitLabNotImplemented(t *testing.T) {
+func TestParseGitLabRepo(t *testing.T) {
+	cases := []struct {
+		in      string
+		host    string
+		project string
+		wantErr bool
+	}{
+		{"https://gitlab.com/me/backend", "gitlab.com", "me/backend", false},
+		{"https://gitlab.com/me/backend.git", "gitlab.com", "me/backend", false},
+		{"https://gitlab.example.com/group/sub/repo", "gitlab.example.com", "group/sub/repo", false},
+		{"https://gitlab.com/only", "", "", true},
+		{"https://gitlab.com/", "", "", true},
+		{"::not a url", "", "", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			host, project, err := parseGitLabRepo(tc.in)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if host != tc.host || project != tc.project {
+				t.Errorf("got (%q, %q), want (%q, %q)", host, project, tc.host, tc.project)
+			}
+		})
+	}
+}
+
+func TestGitLab_LatestSHA(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("PRIVATE-TOKEN"); got != "glpat-test" {
+			t.Errorf("PRIVATE-TOKEN = %q", got)
+		}
+		// Project path "group/sub/repo" must be url-encoded as one segment.
+		// EscapedPath preserves %2F; r.URL.Path would decode it.
+		if r.URL.EscapedPath() != "/projects/group%2Fsub%2Frepo/repository/commits/main" {
+			t.Errorf("path = %q", r.URL.EscapedPath())
+		}
+		fmt.Fprintln(w, `{"id": "deadbeef"}`)
+	}))
+	defer srv.Close()
+
 	g := NewGit()
-	_, err := g.LatestSHA(context.Background(), AppConfig{Git: GitConfig{Provider: "gitlab"}})
-	if err == nil || !strings.Contains(err.Error(), "gitlab") {
-		t.Errorf("LatestSHA gitlab err = %v", err)
+	g.baseURL = srv.URL
+	sha, err := g.LatestSHA(context.Background(), AppConfig{
+		Git: GitConfig{
+			Provider: "gitlab",
+			RepoURL:  "https://gitlab.example.com/group/sub/repo",
+			Branch:   "main",
+			Token:    "glpat-test",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sha != "deadbeef" {
+		t.Errorf("sha = %q, want deadbeef", sha)
+	}
+}
+
+func TestGitLab_LatestSHA_NonOK(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, `{"message": "401 Unauthorized"}`)
+	}))
+	defer srv.Close()
+
+	g := NewGit()
+	g.baseURL = srv.URL
+	_, err := g.LatestSHA(context.Background(), AppConfig{
+		Git: GitConfig{
+			Provider: "gitlab",
+			RepoURL:  "https://gitlab.com/o/r",
+			Branch:   "main",
+			Token:    "t",
+		},
+	})
+	if err == nil {
+		t.Fatal("expected error on 401")
+	}
+	if !strings.Contains(err.Error(), "401") {
+		t.Errorf("error %q does not mention 401", err.Error())
+	}
+}
+
+func TestGitLab_FetchCompose(t *testing.T) {
+	expected := []byte("services:\n  api:\n    image: x\n")
+	encoded := base64.StdEncoding.EncodeToString(expected)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("ref") != "deadbeef" {
+			t.Errorf("ref = %q", r.URL.Query().Get("ref"))
+		}
+		if r.URL.EscapedPath() != "/projects/o%2Fr/repository/files/docker-compose.yml" {
+			t.Errorf("path = %q", r.URL.EscapedPath())
+		}
+		fmt.Fprintf(w, `{"content": %q, "encoding": "base64"}`, encoded)
+	}))
+	defer srv.Close()
+
+	g := NewGit()
+	g.baseURL = srv.URL
+	body, err := g.FetchCompose(context.Background(), AppConfig{
+		Git: GitConfig{
+			Provider:    "gitlab",
+			RepoURL:     "https://gitlab.com/o/r",
+			ComposePath: "docker-compose.yml",
+			Token:       "t",
+		},
+	}, "deadbeef")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != string(expected) {
+		t.Errorf("body = %q, want %q", body, expected)
+	}
+}
+
+func TestGitLab_FetchCompose_WrongEncoding(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `{"content": "raw", "encoding": "text"}`)
+	}))
+	defer srv.Close()
+
+	g := NewGit()
+	g.baseURL = srv.URL
+	_, err := g.FetchCompose(context.Background(), AppConfig{
+		Git: GitConfig{
+			Provider:    "gitlab",
+			RepoURL:     "https://gitlab.com/o/r",
+			ComposePath: "x.yml",
+			Token:       "t",
+		},
+	}, "sha")
+	if err == nil {
+		t.Fatal("expected error on non-base64 encoding")
+	}
+	if !strings.Contains(err.Error(), "encoding") {
+		t.Errorf("error %q does not mention encoding", err.Error())
 	}
 }
 

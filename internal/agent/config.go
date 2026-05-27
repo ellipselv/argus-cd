@@ -108,6 +108,11 @@ func LoadConfig(path string) (*Config, error) {
 		if a.Git.Provider == "" {
 			a.Git.Provider = "github"
 		}
+		switch a.Git.Provider {
+		case "github", "gitlab":
+		default:
+			return nil, fmt.Errorf(`apps[%d].git.provider: must be "github" or "gitlab", got %q`, i, a.Git.Provider)
+		}
 		if a.Git.RepoURL == "" {
 			return nil, fmt.Errorf("apps[%d].git.repo_url is required", i)
 		}

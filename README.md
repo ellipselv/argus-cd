@@ -1,8 +1,8 @@
 # Argus CD - Lightweight single-binary GitOps agent
 
 Lightweight single-binary GitOps agent for Docker Compose. Runs on each target
-VM, polls GitHub for branch updates, deploys via `docker compose`, and rolls
-back automatically when a new version fails its health check.
+VM, polls GitHub or GitLab for branch updates, deploys via `docker compose`,
+and rolls back automatically when a new version fails its health check.
 
 ## Install
 
@@ -40,8 +40,10 @@ webhook_url = "https://alerts.example.com/argus"  # optional
   token_expires_at  = 2026-08-20T10:00:00Z
 ```
 
-PAT scopes: `contents:read`, `metadata:read`. Local secrets go in a `.env`
-file inside `apps_dir`.
+PAT scopes: GitHub `contents:read`, `metadata:read` — or GitLab `read_repository`.
+Set `provider = "gitlab"` and use the GitLab repo URL (cloud or self-hosted);
+the API base is derived from the host. Local secrets go in a `.env` file inside
+`apps_dir`.
 
 ## Run
 

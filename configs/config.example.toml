@@ -1,5 +1,5 @@
 # argus-cd agent config. Default install path: /etc/argus/config.toml
-# This file embeds a GitHub PAT — chmod 600 in production.
+# This file embeds a PAT — chmod 600 in production.
 
 [agent]
 id = "node-01"
@@ -17,10 +17,21 @@ health_interval = "5s"
 webhook_url = ""
 
   [apps.git]
-  provider = "github"                 # gitlab not yet implemented
+  provider = "github"                 # "github" or "gitlab"
   repo_url = "https://github.com/me/backend"
   branch = "main"
   compose_path = "docker-compose.yml"
   token = "github_pat_11A..."
   token_obtained_at = 2026-05-20T10:00:00Z
   token_expires_at = 2026-08-20T10:00:00Z
+
+# GitLab example (cloud or self-hosted — API base derived from repo_url host):
+#
+#   [apps.git]
+#   provider = "gitlab"
+#   repo_url = "https://gitlab.example.com/group/sub/backend"
+#   branch = "main"
+#   compose_path = "docker-compose.yml"
+#   token = "glpat-..."
+#
+# Token scopes: read_repository.
